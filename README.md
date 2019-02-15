@@ -7,4 +7,4 @@ While the VTN method is simple enough that it can be easily implemented in Excel
 The author suggests using visual inspection of the plots to determine reaction orders. This can be a posed as a total variation minimization problem. The module developed here provides methods for:
 - Computing: `tv()`, 
 - Minimizing: `min_tv()`
-- Plotting: `plot_tv()` 
+- Plotting: `plot_tv()`, `plot_min_tv()` 
