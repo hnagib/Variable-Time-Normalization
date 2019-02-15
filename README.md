@@ -1,4 +1,4 @@
-# Variable-Time-Normalization
+# Variable Time Normalization
 
 A python implementation of the analysis done in [this](https://github.com/hnagib/Variable-Time-Normalization/blob/master/papers/Bur-s-2016-Angewandte_Chemie_International_Edition.pdf) paper. The data used for testing model were obtained from the paper's [supplementary materials](https://github.com/hnagib/Variable-Time-Normalization/blob/master/papers/anie201609757-sup-0001-misc_information.pdf).
 
