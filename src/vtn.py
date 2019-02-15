@@ -117,7 +117,7 @@ class VariableTimeNormalization:
         )
         plot.line(x=x_var, y=self.product_name, source=x.sort_values(x_var), legend='line', color='grey')
         
-        plot.add_tools(HoverTool(tooltips=[(i, f'@{i}'+'{0.000}') for i in self.var_conc_comp + self.const_conc_comp + [self.product_name]]))
+        plot.add_tools(HoverTool(tooltips=[(i, f'@{i}'+'{0.000}') for i in [self.product_name]]))
         plot.xaxis.axis_label = x_var
         plot.yaxis.axis_label = f"[{self.product_name}]"
         plot.legend.location = "top_left"
@@ -125,14 +125,15 @@ class VariableTimeNormalization:
         show(plot)
     
     @property
-    def df_reg(self):
+    def df_kobs_reg(self):
         df = pd.concat([self.df_vtn[f'{exp}'][[self.product_name, self.kobs_normalizer]] for exp in self.df0.keys()]).dropna()
-        df.columns = ['y', 'x'] 
+        df['y'] = df[self.product_name]
+        df['x'] = df[self.kobs_normalizer]
         return df
     
     @property
     def kobs_line(self):
-        return smf.ols(self.kobs_line_format, data=self.df_reg).fit()
+        return smf.ols(self.kobs_line_format, data=self.df_kobs_reg[['x','y']]).fit()
     
     @property
     def kobs(self):
@@ -144,7 +145,7 @@ class VariableTimeNormalization:
         for key, color in zip(self.df0.keys(), itertools.cycle(palette)):
             plot.circle(
                 x=x_var, 
-                y='P', 
+                y=self.product_name, 
                 color=color, 
                 source=ColumnDataSource(self.df_vtn[key]),
                 legend=f'Experiment-{key}',
@@ -154,7 +155,7 @@ class VariableTimeNormalization:
         plot.line(
             x='X',
             y='Yp',
-            source=pd.DataFrame({'X':self.df_reg['x'], 'Yp':self.kobs_line.predict(self.df_reg['x'])}),
+            source=pd.DataFrame({'X':self.df_kobs_reg['x'], 'Yp':self.kobs_line.predict(self.df_kobs_reg['x'])}),
             color='grey',
             legend=f'ols: {self.kobs_line_format}'
         )
@@ -176,18 +177,19 @@ def tv(x0, exp, comp):
         x_var="t[{comp}]^{rxn_order}"
         
     x = pd.concat([
-        exp.df_vtn[i][[self.product_name,x_var.format(comp=comp, rxn_order=x0)]] 
+        exp.df_vtn[i][[exp.product_name,x_var.format(comp=comp, rxn_order=x0)]] 
         for i in exp.exp_pairs[comp]['exps']]
     )
-    x.columns=['P','t']
+    
+    x.columns=[exp.product_name,'t']
     x=x.sort_values('t').dropna()
-    x['P_diff'] = x['P'].diff(1)
+    x[f'{exp.product_name}_diff'] = x[exp.product_name].diff(1)
     x['t'] = x['t']/x['t'].max()
     x['t_diff'] = x['t'].diff(1)
-    x['tv'] = np.sqrt(x['P_diff'].pow(2)+x['t_diff'].pow(2))
+    x['tv'] = np.sqrt(x[f'{exp.product_name}_diff'].pow(2)+x['t_diff'].pow(2))
     return x['tv'].sum()
         
-def plot_order_smoothness(exp, comps, x0_arange):
+def plot_tv(exp, comps, x0_arange):
     plots=[]
     for comp in comps:
         p = []
@@ -201,7 +203,7 @@ def plot_order_smoothness(exp, comps, x0_arange):
         plot.line(x, y, source=ColumnDataSource(df), color='grey')    
         plot.xaxis.axis_label = x
         plot.yaxis.axis_label = y
-        plot.add_tools(HoverTool(tooltips=[(i, f'@{i}'+'{0.000}') for i in [x, y]]))
+        #plot.add_tools(HoverTool(tooltips=[(i, f'@{i}'+'{0.000}') for i in [x, y]]))
         plots.append(plot)
     
     show(row(plots))
