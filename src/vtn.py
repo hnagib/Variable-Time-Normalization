@@ -8,6 +8,7 @@ from bokeh.palettes import Dark2_5 as palette
 from bokeh.layouts import row
 import itertools 
 import numpy as np
+from scipy import optimize
 
 class VariableTimeNormalization:
     '''
@@ -166,8 +167,10 @@ class VariableTimeNormalization:
         plot.legend.click_policy="hide"
         show(plot)
         
-def tv(x0, exp, comp):
+def tv(x0, *args):
     x0 = x0[0]
+    exp = args[0]
+    comp = args[1]
     exp.rxn_orders[comp]=x0
     
     if comp in exp.var_conc_comp:
@@ -188,13 +191,46 @@ def tv(x0, exp, comp):
     x['t_diff'] = x['t'].diff(1)
     x['tv'] = np.sqrt(x[f'{exp.product_name}_diff'].pow(2)+x['t_diff'].pow(2))
     return x['tv'].sum()
+
+
+def min_tv(exp, comp, x0_arange, n):
+    res = optimize.brute(
+        func=tv, 
+        ranges=(x0_arange,), 
+        args=(exp, comp),
+        Ns=n,
+        full_output=True, 
+        finish=optimize.fmin
+    )
+    return res
+
+
+def plot_min_tv(exp, comps, x0_arange, n):
+    plots=[]
+    for comp in comps:
+        res = min_tv(exp, comp, x0_arange, n)
+        plot = figure(width=325,height=300, title=f'Order of {comp}: {res[0]}')
+        df_all = pd.DataFrame({'x':np.append(res[2],res[0]), 'y':np.append(res[3],res[1])}).sort_values('x')
+        df_min = pd.DataFrame({'x':res[0], 'y':res[1]}).sort_values('x')
+        x=f'Order of [{comp}]'
+        y='TV()'
+        df_all.columns=[x,y]
+        df_min.columns=[x,y]
+        plot.line(x, y, source=ColumnDataSource(df_all), color='grey') 
+        plot.circle(x, y, source=ColumnDataSource(df_min), color='green', size=10, alpha=0.5) 
+        plot.xaxis.axis_label = x
+        plot.yaxis.axis_label = y
+        plots.append(plot)
         
+    show(row(plots))
+    
+
 def plot_tv(exp, comps, x0_arange):
     plots=[]
     for comp in comps:
         p = []
         for i in np.arange(x0_arange[0],x0_arange[1], x0_arange[2]):
-            p.append([i, tv([i], exp, comp)])
+            p.append([i, tv([i], *(exp, comp))])
         df = pd.DataFrame(p)
         plot = figure(width=325,height=300, title=f'{comp}')
         x=f'Order of [{comp}]'
