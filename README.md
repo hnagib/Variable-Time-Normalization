@@ -10,3 +10,29 @@ While the VTN method is simple enough that it can be easily implemented in Excel
 - Computing: `tv()`, 
 - Minimizing: `min_tv()`
 - Plotting: `plot_tv()`, `plot_min_tv()` 
+
+:open_file_folder: Repo Organization
+--------------------------------
+
+    ├── src                
+    │   └── vtn.py                                                    <-- variable time normalization module
+    │     
+    ├── notebooks          
+    │   ├── 00-hnagib-demo.ipynb                                      <-- demo without oop         
+    │   ├── 01-hnagib-oop.ipynb                                       <-- oop demo
+    │   └── ...                                              
+    │    
+    ├── data
+    │   ├── exp.xlsx                                                  <- all 4 experiments
+    │   ├── exp_1.csv                                                 <- experiment 1
+    │   └── ...
+    │
+    ├── papers                                               
+    │   ├── Bur-s-2016-Angewandte_Chemie_International_Edition.pdf    <- original paper on vtn
+    │   ├── anie201609757-sup-0001-misc_information.pdf               <- supplementary materials
+    │   └── ...
+    │
+    ├── Makefile                                                      <- un/install environment & download data commands
+    ├── requirements.txt                                              <- List of python packages required     
+    ├── README.md
+    └── .gitignore  
